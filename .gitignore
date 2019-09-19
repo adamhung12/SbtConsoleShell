@@ -1,6 +1,7 @@
 .idea
 
-scripts
+/scripts
+dynamic
 
 dist/*
 target/
