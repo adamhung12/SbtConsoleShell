@@ -13,17 +13,17 @@ case class process[Item,Out](p:Item=>Out, boxedItem:progress[Item]){
 class progress[Item](val total:Int, val index:Int, val item:Item) {
   def exec[Out](p:Item=>Out):process[Item,Out]=Exec(this,p)
 }
-object progress{
+object Monitor{
   def apply[Item,Out](total: Int, index: Int, item: Item): progress[Item] = new progress(total, index, item)
   def apply[Item,Out](seq:Seq[Item]): Seq[progress[Item]] = {
     val size = seq.size
-    seq.zipWithIndex.map{it=>progress[Item,Out](size, it._2, it._1)}
+    seq.zipWithIndex.map{it=>Monitor[Item,Out](size, it._2, it._1)}
   }
 }
 case class Exec[Item,Out](item:progress[Item])
 
 object Exec{
-  def apply[Item,Out](item:progress[Item],p:Item=>Out): process[Item,Out] = process.apply(p,item)
+  def apply[Item,Out](item:progress[Item], p:Item=>Out): process[Item,Out] = process.apply(p,item)
 
   implicit def seq2Exec[Item,Out](seq:Seq[Item]):Seq[progress[Item]] = {
     val size = seq.size
@@ -31,7 +31,7 @@ object Exec{
   }
 
   def main(args: Array[String]): Unit = {
-    progress(Array(1,2,3)).filter{it=>
+    Monitor(Array(1,2,3)).filter{ it=>
       it exec {it=>println(s"execute ${it}");it==2} withLog(s"log ${it.item}")
     }
   }
