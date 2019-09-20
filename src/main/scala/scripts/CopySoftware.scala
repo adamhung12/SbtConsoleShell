@@ -13,8 +13,8 @@ object CopySoftware {
     new BackupUtils("E:\\nextcloud",Some("Softwares"),
       Array(
 //        ReplacingStrategyInstance("C:\\Temp\\xeth\\backup tools\\dest1\\"),
-        MultiCopiesStrategyInstance("D:\\Users\\xcwhung\\software_bk", 3),
-        MultiCopiesStrategyInstance("F:\\bk", 3)
+        MultiCopiesStrategyInstance("D:\\Users\\xcwhung\\software_bk", 8),
+        MultiCopiesStrategyInstance("Q:\\bk", 8)
       ),
       None
     )
