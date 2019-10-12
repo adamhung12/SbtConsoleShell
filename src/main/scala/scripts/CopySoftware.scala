@@ -1,6 +1,5 @@
 package scripts
 
-import me.xethh.console.tools.{BackupUtils, MultiCopiesStrategyInstance, ReplacingStrategyInstance}
 
 
 object CopySoftware {
@@ -10,9 +9,9 @@ object CopySoftware {
 //      Array("C:\\Temp\\xeth\\backup tools\\dest1\\software","C:\\Temp\\xeth\\backup tools\\dest2\\software")
 //    )
 
+    import me.xethh.console.tools.{BackupUtils, MultiCopiesStrategyInstance, ReplacingStrategyInstance}
     new BackupUtils("E:\\nextcloud",Some("Softwares"),
       Array(
-//        ReplacingStrategyInstance("C:\\Temp\\xeth\\backup tools\\dest1\\"),
         MultiCopiesStrategyInstance("D:\\Users\\xcwhung\\software_bk", 8),
         MultiCopiesStrategyInstance("Q:\\bk", 8)
       ),
