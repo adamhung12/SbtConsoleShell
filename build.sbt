@@ -13,6 +13,7 @@ libraryDependencies += "me.xethh.utils" % "JDBCProvider" % "1.1.1-RELEASE"
 libraryDependencies += "me.xethh.libs.toolkits" % "commons" % "2.1.2"
 libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.48"
 libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8"
+libraryDependencies += "org.apache.commons" % "commons-compress" % "1.19"
 
 lazy val cleanup = taskKey[Unit]("cleanup")
 cleanup := {
