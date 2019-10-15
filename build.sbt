@@ -8,6 +8,11 @@ libraryDependencies += "javax.mail" % "mail" % "1.4"
 libraryDependencies += "me.xethh.utils" % "DateUtils" % "6.0.0.RC1-RELEASE"
 libraryDependencies += "com.jcraft" % "jsch" % "0.1.55"
 libraryDependencies += "me.xethh.libs.toolkits" % "commons" % "2.0.0"
+libraryDependencies += "org.jsoup" % "jsoup" % "1.12.1"
+libraryDependencies += "me.xethh.utils" % "JDBCProvider" % "1.1.1-RELEASE"
+libraryDependencies += "me.xethh.libs.toolkits" % "commons" % "2.1.2"
+libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.48"
+libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8"
 
 lazy val cleanup = taskKey[Unit]("cleanup")
 cleanup := {
