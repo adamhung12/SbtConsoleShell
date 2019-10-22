@@ -87,7 +87,7 @@ object FileMan {
       }
       else System.out.println(file.getName + " is not supported")
     }
-    addToArchiveCompression(out, file, finalResult.toString, file.toString)
+    addToArchiveCompression(out, file, finalResult.toString, file.toString, filters)
     out.flush()
     out.close()
   }
