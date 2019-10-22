@@ -1,7 +1,10 @@
 package me.xethh.console.tools.fileMan
 
-import java.io.{File, FileInputStream, FileOutputStream}
+import java.io.{File, FileInputStream, FileOutputStream, FilenameFilter, InputStream, OutputStream}
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributeView
 
+import me.xethh.libs.toolkits.OSDetecting.{OS, OSDector}
 import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveInputStream, TarArchiveOutputStream}
 import org.apache.commons.compress.compressors.gzip.{GzipCompressorInputStream, GzipCompressorOutputStream}
 import org.apache.commons.compress.utils.IOUtils
@@ -22,7 +25,11 @@ object FileMan {
               val curfile = new File(out, entry.getName)
               val parent = curfile.getParentFile
               if (!parent.exists) parent.mkdirs
-              IOUtils.copy(fin, new FileOutputStream(curfile))
+              val os = new FileOutputStream(curfile)
+              IOUtils.copy(fin, os)
+              os.flush()
+              os.close()
+              curfile.setLastModified(entry.getLastModifiedDate.getTime)
             }
           }
         } finally if (fin != null) fin.close()
@@ -31,44 +38,51 @@ object FileMan {
     decompress(tarArchiveInputStream, new File(unTarToStr))
   }
 
-  def unTarOnly(unTarFileStr:String, unTarToStr:String)={
-    val unTarfile = new File(unTarFileStr)
-    if(!unTarfile.exists()) throw new RuntimeException(s"Un Tar Target[${unTarfile}] not exists")
-
+  def unTarStream(inputStream: InputStream) = new TarArchiveInputStream(inputStream)
+  def unTarOnlyTo(inputStream: InputStream, unTarToStr:String)={
     val unTarTo = new File(unTarToStr)
     if(unTarTo.exists())
       throw new RuntimeException(s"Un Tar Destination[${unTarTo}] already exist")
 
-    val fin = new TarArchiveInputStream(new FileInputStream(unTarfile))
-    unTar(fin, unTarTo.toString)
+    unTar(unTarStream(inputStream), unTarTo.toString)
   }
-  def unTarGz(unTarFileStr:String, unTarToStr:String)={
-    val unTarfile = new File(unTarFileStr)
-    if(!unTarfile.exists()) throw new RuntimeException(s"Un Tar Target[${unTarfile}] not exists")
-
+  def unTarGzTo(inputStream: InputStream, unTarToStr:String)={
     val unTarTo = new File(unTarToStr)
     if(unTarTo.exists())
       throw new RuntimeException(s"Un Tar Destination[${unTarTo}] already exist")
 
-    val fin = new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(unTarfile)))
-    unTar(fin, unTarTo.toString)
+    unTar(unTarStream(inputStream), unTarTo.toString)
   }
-  def tar(out: TarArchiveOutputStream, file: File, finalResult: File){
-    def addToArchiveCompression(out: TarArchiveOutputStream, file: File, dir: String, fileBase:String): Unit = {
+
+  def tarWithoutFilter(out: TarArchiveOutputStream, file: File, finalResult: File): Unit ={
+    tar(out, file, finalResult, List.empty);
+  }
+
+  def tar(out: TarArchiveOutputStream, file: File, finalResult: File, filters: Seq[FilenameFilter]){
+    def addToArchiveCompression(out: TarArchiveOutputStream, file: File, dir: String, fileBase:String, filters: Seq[FilenameFilter]): Unit = {
       val entry = dir
       if (file.isFile) {
-        out.putArchiveEntry(new TarArchiveEntry(file, entry.replace(fileBase, "")))
+        val archiveEntry = new TarArchiveEntry(file, entry.replace(fileBase, ""))
+        archiveEntry.setSize(file.length())
+        archiveEntry.setModTime(file.lastModified())
+        archiveEntry.setMode(
+          (if(file.canRead) 4 else 0)+
+            (if(file.canWrite) 2 else 0)+
+            (if(file.canExecute) 1 else 0)
+        )
+        out.putArchiveEntry(archiveEntry)
         try {
           val in = new FileInputStream(file)
           try IOUtils.copy(in, out)
           finally if (in != null) in.close()
         }
         out.closeArchiveEntry()
+        out.flush()
       }
       else if (file.isDirectory) {
         val children = file.listFiles
         if (children != null) for (child <- children) {
-          addToArchiveCompression(out, child, child.toString, fileBase)
+          addToArchiveCompression(out, child, child.toString, fileBase, filters)
         }
       }
       else System.out.println(file.getName + " is not supported")
@@ -77,21 +91,12 @@ object FileMan {
     out.flush()
     out.close()
   }
-  def tarGz(pathTarget:String, resultTar:String): Unit= {
-    if(new File(resultTar).exists())
-      throw new RuntimeException(s"Path[${resultTar}] already exists")
-    else{
-      val taos = new TarArchiveOutputStream(new GzipCompressorOutputStream(new FileOutputStream(resultTar)))
-      tar(taos, new File(pathTarget), new File(resultTar))
-    }
-
+  def tarGz(pathTarget:String, outputStream:OutputStream, filters: Seq[FilenameFilter]): Unit= {
+    val taos = new TarArchiveOutputStream(new GzipCompressorOutputStream(outputStream))
+    tar(taos, new File(pathTarget), new File(pathTarget),filters)
   }
-  def tarOnly(pathTarget:String, resultTar:String): Unit= {
-    if(new File(resultTar).exists())
-      throw new RuntimeException("Path already exists")
-    else{
-      val taos = new TarArchiveOutputStream(new FileOutputStream(resultTar))
-      tar(taos, new File(pathTarget), new File(resultTar))
-    }
+  def tarOnly(pathTarget:String,outputStream: OutputStream, filters: Seq[FilenameFilter]): Unit= {
+    val taos = new TarArchiveOutputStream(outputStream)
+    tar(taos, new File(pathTarget), new File(pathTarget), filters)
   }
 }
