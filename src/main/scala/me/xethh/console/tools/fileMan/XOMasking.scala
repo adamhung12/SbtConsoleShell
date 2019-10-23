@@ -3,33 +3,26 @@ package me.xethh.console.tools.fileMan
 import java.io.{InputStream, OutputStream}
 
 object XOMasking {
-  def unmask(os:OutputStream, mask:Array[Int]):OutputStream = new OutputStream{
+  def maskOutputStream(os:OutputStream, mask:Array[Int]):OutputStream = new OutputStream {
     var index:Int = -1;
     def nexIndex():Int = {
       index=index+1
-      index
+      index % mask.length
     }
 
     override def write(b: Int): Unit = {
-      os.write(b ^ mask(nexIndex() % mask.length))
+      os.write(mask(nexIndex()) ^ b)
     }
   }
 
-  def mask(is:InputStream, mask:Array[Int]):InputStream = new InputStream {
+  def maskInputStream(is:InputStream, mask:Array[Int]):InputStream = new InputStream {
     var index:Int = -1;
     def nexIndex():Int = {
       index=index+1
-      index
+      index % mask.length
     }
 
-    override def read(): Int = {
-      val read = is.read()
-      index = nexIndex() % mask.length
-      val m = mask(index)
-      val rs = read ^ m
-      rs
-//      is.read() ^ mask(nexIndex() % mask.length)
-    }
+    override def read(): Int =  mask(nexIndex()) ^ is.read()
   }
 
   def main(args: Array[String]): Unit = {
@@ -43,8 +36,8 @@ object XOMasking {
     val os = new OutputStream {
       override def write(b: Int): Unit = println(b)
     }
-    val mIs = mask(is, Array(2,3,4,4,6,0,7,7))
-    val mOs = unmask(os, Array(2,3,4,4,6,0,7,7))
+    val mIs = maskInputStream(is, Array(2,3,4,4,6,0,7,7))
+    val mOs = maskOutputStream(os, Array(2,3,4,4,6,0,7,7))
     val inputs = Stream.continually(mIs.read).take(10).map(it=>
       it
     ).toArray
