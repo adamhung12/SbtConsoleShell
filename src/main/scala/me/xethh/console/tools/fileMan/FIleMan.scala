@@ -51,7 +51,7 @@ object FileMan {
     if(unTarTo.exists())
       throw new RuntimeException(s"Un Tar Destination[${unTarTo}] already exist")
 
-    unTar(unTarStream(inputStream), unTarTo.toString)
+    unTar(unTarStream(new GzipCompressorInputStream(inputStream)), unTarTo.toString)
   }
 
   def tarWithoutFilter(out: TarArchiveOutputStream, file: File, finalResult: File): Unit ={
