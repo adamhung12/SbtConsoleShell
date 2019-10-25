@@ -2,6 +2,7 @@
 
 /src/main/scala/scripts/*
 /dynamic
+/potocal
 
 dist/*
 target/
