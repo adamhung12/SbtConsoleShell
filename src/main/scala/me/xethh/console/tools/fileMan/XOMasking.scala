@@ -22,7 +22,13 @@ object XOMasking {
       index % mask.length
     }
 
-    override def read(): Int =  mask(nexIndex()) ^ is.read()
+    override def read(): Int =  {
+      val value = is.read()
+      if(value!= -1)
+        mask(nexIndex()) ^ value
+      else
+        value
+    }
   }
 
   def main(args: Array[String]): Unit = {

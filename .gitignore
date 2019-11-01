@@ -1,8 +1,8 @@
 .idea
 
-/src/main/scala/scripts/*
-/dynamic
-/potocal
+/src/main/scala/scripts/
+/src/main/scala/protocal/
+/src/test/scala/protocal/
 
 dist/*
 target/

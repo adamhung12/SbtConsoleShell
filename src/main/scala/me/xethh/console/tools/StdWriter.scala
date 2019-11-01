@@ -6,7 +6,8 @@ import java.nio.charset.StandardCharsets
 class StdWriter(val processed:OutputStream) extends PrintStream(processed){
   def this(parent:PrintStream, fileName:String)= {
     this(new OutputStream {
-      val fos = new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8)
+//      val fos = new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8)
+      val fos = new FileOutputStream(fileName)
 
       override def write(b: Int): Unit = {
         parent.write(b)

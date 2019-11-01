@@ -34,6 +34,9 @@ object FileMan {
           }
         } finally if (fin != null) fin.close()
       }
+      catch {
+        case ex:Exception => ex.printStackTrace()
+      }
     }
     decompress(tarArchiveInputStream, new File(unTarToStr))
   }
@@ -75,6 +78,9 @@ object FileMan {
           val in = new FileInputStream(file)
           try IOUtils.copy(in, out)
           finally if (in != null) in.close()
+        }
+        catch {
+          case x:Exception=>x.printStackTrace()
         }
         out.closeArchiveEntry()
         out.flush()

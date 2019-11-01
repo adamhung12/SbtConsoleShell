@@ -12,6 +12,20 @@ object VFS {
     else
       s"sftp://${username}:${password}@${hostname}/"
   }
+  def createDefaultOptions(keyPath:File, passphrase:String)={
+    val options = new FileSystemOptions()
+    SftpFileSystemConfigBuilder.getInstance().setStrictHostKeyChecking(options, "no")
+    SftpFileSystemConfigBuilder.getInstance().setUserDirIsRoot(options, true)
+    SftpFileSystemConfigBuilder.getInstance().setSessionTimeoutMillis(options, 10000)
+    if(keyPath!=null){
+      val identityInfo = if(passphrase!=null)
+        new IdentityInfo(keyPath, passphrase.getBytes)
+      else
+        new IdentityInfo(keyPath)
+      SftpFileSystemConfigBuilder.getInstance().setIdentityProvider(options, identityInfo)
+    }
+    options
+  }
   def createDefaultOptions(keyPath:String, passphrase:String)={
     val options = new FileSystemOptions()
     SftpFileSystemConfigBuilder.getInstance().setStrictHostKeyChecking(options, "no")
