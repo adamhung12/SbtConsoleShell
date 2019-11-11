@@ -1,7 +1,7 @@
 package me.xethh.console.tools.control
 
 object HoldObject {
-  def let[A,B](a:A)= (oper:A=>B)=> oper(a)
+  def let[A,B](a:A)= (oper:A=>B)=> if(a!=null) oper(a) else null
   def let2[A,B,C](a:A,b:B)= (oper:(A,B)=>C)=> oper(a,b)
   def let3[A,B,C,D](a:A,b:B,c:C)= (oper:(A,B,C)=>D)=> oper(a,b,c)
   def let3[A,B,C,D,E](a:A,b:B,c:C,d:D)= (oper:(A,B,C,D)=>E)=> oper(a,b,c,d)
