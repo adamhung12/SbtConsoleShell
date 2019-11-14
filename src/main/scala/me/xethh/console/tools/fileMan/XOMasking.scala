@@ -13,6 +13,10 @@ object XOMasking {
     override def write(b: Int): Unit = {
       os.write(mask(nexIndex()) ^ b)
     }
+
+    override def flush(): Unit = os.flush()
+
+    override def close(): Unit = os.close()
   }
 
   def maskInputStream(is:InputStream, mask:Array[Int]):InputStream = new InputStream {
@@ -29,6 +33,8 @@ object XOMasking {
       else
         value
     }
+
+    override def close(): Unit = super.close()
   }
 
   def main(args: Array[String]): Unit = {
