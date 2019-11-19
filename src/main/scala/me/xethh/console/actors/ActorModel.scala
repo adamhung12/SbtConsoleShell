@@ -13,8 +13,8 @@ import me.xethh.console.tools.control.InputStreamReader
 import me.xethh.console.tools.fileMan.FileMan
 import me.xethh.utils.dateManipulation.{DateFactory, DateFormatBuilderImpl}
 import org.apache.commons.io.IOUtils
-import protocol.{DecryptingProtocolProvider, EncryptingProtocolProvider}
 import protocol.m428702.P428702
+import protocol.{DecryptingProtocolProvider, EncryptingProtocolProvider}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -28,10 +28,12 @@ object ActorModel{
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
   @JsonSubTypes(value = Array(
     new Type(value = classOf[MoveInstruction], name="[Moving Instruction]"),
-    new Type(value = classOf[BackupInstruction], name="[Backup Instruction]")
+    new Type(value = classOf[BackupInstruction], name="[Backup Instruction]"),
+    new Type(value = classOf[CopyInstruction], name="[Copy Instruction]")
   ))
   abstract class Instruction() extends Serializable
-  case class MoveInstruction(filename:String, source:String, dest:String) extends Instruction()
+  case class CopyInstruction(filename:String, source:String, dest:String, rename:Option[String]) extends Instruction()
+  case class MoveInstruction(filename:String, source:String, dest:String, rename:Option[String]) extends Instruction()
   case class BackupInstruction(mode:Int, source:String, dest:String) extends Instruction()
 
   case class NoSupportedEncryption(description:String)
@@ -42,7 +44,25 @@ object ActorModel{
       case x:(Long, Instruction)=>
         val id = x._1
         x._2 match {
-          case MoveInstruction(filename, source, dest) =>
+          case CopyInstruction(filename, source, dest, renaming) =>
+            val bf:ListBuffer[String] = ListBuffer.empty
+            val dateStr = DateFormatBuilderImpl.ISO8601().format(DateFactory.now.asDate)
+            bf+=s"[$dateStr] Start copying from Source[$source] to Destination[$dest]"
+
+            keep2 (new File(s"$source/$filename"), new File(dest)) exec {(source, dest) =>
+              assert(source.exists())
+              assert(dest.exists() && dest.isDirectory)
+              val is = new FileInputStream(source).getChannel
+              val os = new FileOutputStream(dest.getPath.concat(s"/${if(renaming.isEmpty) filename else renaming.get}")).getChannel
+              is.transferTo(0,source.length(), os)
+              is.close()
+              os.close()
+
+              val endDateStr = DateFormatBuilderImpl.ISO8601().format(DateFactory.now.asDate)
+              bf+=s"[$endDateStr] End moving process"
+              routerActor ! InstructionCompleted(id, bf.toList)
+            }
+          case MoveInstruction(filename, source, dest, renaming) =>
             val bf:ListBuffer[String] = ListBuffer.empty
             val dateStr = DateFormatBuilderImpl.ISO8601().format(DateFactory.now.asDate)
             bf+=s"[$dateStr] Start moving from Source[$source] to Destination[$dest]"
@@ -51,10 +71,12 @@ object ActorModel{
               assert(source.exists())
               assert(dest.exists() && dest.isDirectory)
               val is = new FileInputStream(source).getChannel
-              val os = new FileOutputStream(dest.getPath.concat(s"/$filename")).getChannel
+              val os = new FileOutputStream(dest.getPath.concat(s"/${if(renaming.isEmpty) filename else renaming.get}")).getChannel
               is.transferTo(0,source.length(), os)
               is.close()
               os.close()
+
+              source.delete()
 
               val endDateStr = DateFormatBuilderImpl.ISO8601().format(DateFactory.now.asDate)
               bf+=s"[$endDateStr] End moving process"
@@ -93,7 +115,7 @@ object ActorModel{
         os.close()
         list.foreach(it=>log(id)._2.append(it))
         val date = DateFormatBuilderImpl.ISO8601().format(DateFactory.now.asDate())
-        log(id)._2.append(s"[${date}]Deleting instr file[${log(id)._1.toString}]: ${log(id)._1.delete()}")
+        log(id)._2.append(s"[${date}] Deleting instr file[${log(id)._1.toString}]: ${log(id)._1.delete()}")
         val fos = new FileOutputStream(new File(s"$instructionBkPath/instruction_${"%010d".format(id)}.instr.log"))
         log(id)._2.toList.foreach(it=>fos.write(s"$it\r\n".getBytes()))
         fos.close()
@@ -134,8 +156,6 @@ object ActorModel{
         val instructionProtocol = P428702
         if(InputStreamReader.readInt(is) == instructionProtocol.protocolId){
           is.close()
-//          val pair = ProtocolProvider(instructionProtocol.protocolId)
-//          val de = pair.decryptProtocol()
           val de = DecryptingProtocolProvider(instructionProtocol.protocolId)()
           de.initSingle(isProvider)
           val deIs = de.is()
