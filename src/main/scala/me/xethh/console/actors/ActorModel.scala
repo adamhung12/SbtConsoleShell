@@ -1,6 +1,7 @@
 package me.xethh.console.actors
 
 import java.io.{File, FileInputStream, FileOutputStream, InputStream}
+import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{Actor, ActorSelection}
@@ -13,7 +14,6 @@ import me.xethh.console.tools.control.InputStreamReader
 import me.xethh.console.tools.fileMan.FileMan
 import me.xethh.utils.dateManipulation.{DateFactory, DateFormatBuilderImpl}
 import org.apache.commons.io.IOUtils
-import protocol.m428702.P428702
 import protocol.{DecryptingProtocolProvider, EncryptingProtocolProvider}
 
 import scala.collection.mutable
@@ -76,7 +76,8 @@ object ActorModel{
               is.close()
               os.close()
 
-              source.delete()
+              val df = DateFormatBuilderImpl.ISO8601()
+              bf+=s"[${df.format(new Date)}] delete original file: ${source.delete()}"
 
               val endDateStr = DateFormatBuilderImpl.ISO8601().format(DateFactory.now.asDate)
               bf+=s"[$endDateStr] End moving process"
@@ -153,10 +154,10 @@ object ActorModel{
         instructionRecordActor ! x
       case RawInstructionMaterial(id, isProvider) =>
         val is = isProvider()
-        val instructionProtocol = P428702
-        if(InputStreamReader.readInt(is) == instructionProtocol.protocolId){
+        val instructionProtocol = 428702
+        if(InputStreamReader.readInt(is) == instructionProtocol){
           is.close()
-          val de = DecryptingProtocolProvider(instructionProtocol.protocolId)()
+          val de = DecryptingProtocolProvider(instructionProtocol)()
           de.initSingle(isProvider)
           val deIs = de.is()
           val s = Source.fromInputStream(deIs).mkString

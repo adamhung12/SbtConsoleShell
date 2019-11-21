@@ -10,8 +10,6 @@ import me.xethh.console.actors.DirectorListener.{InstructionDiscoverActor, Liste
 import me.xethh.console.tools.control.HoldObject.keep
 import org.apache.commons.io.IOUtils
 import protocol.{EncryptProtocol, EncryptingProtocolProvider, SpecOutputStream}
-import protocol.m217845.P217845
-import protocol.m428702.P428702
 
 object AkkaSys extends App {
   val sys = ActorSystem("System")
@@ -27,11 +25,11 @@ object AkkaSys extends App {
   mapper.registerModule(DefaultScalaModule)
   val base = "Q:\\temp\\instructions\\from"
   val toBase = "Q:\\temp\\instructions\\to"
-  val bkProtocol = P217845
+  val bkProtocol = 217845
   var encrypted:String = _
   var en:EncryptProtocol = _
   var os:SpecOutputStream = _
-  val instructionProtocol = P428702
+  val instructionProtocol = 428702
 
   val block = {
     val source = s"$base/x.html"
@@ -47,15 +45,15 @@ object AkkaSys extends App {
   }
 
   encrypted = mapper.writeValueAsString(MoveInstruction("a.html", s"$base", s"$toBase", None))
-  en = EncryptingProtocolProvider(instructionProtocol.protocolId)
+  en = EncryptingProtocolProvider(instructionProtocol)
   keep{new File(s"$base/a.instr")} check(_.exists()) exec(_.delete())
 
   os = en.initSingle(s"${base}/a.instr")
   os.write(encrypted.getBytes())
   en.writeHeader()
 
-  encrypted = mapper.writeValueAsString(BackupInstruction(bkProtocol.protocolId, "Q:\\temp\\server601_user", "Q:\\temp\\x.tar.gz.crypt"))
-  en = EncryptingProtocolProvider(instructionProtocol.protocolId)
+  encrypted = mapper.writeValueAsString(BackupInstruction(bkProtocol, "Q:\\temp\\server601_user", "Q:\\temp\\x.tar.gz.crypt"))
+  en = EncryptingProtocolProvider(instructionProtocol)
   keep{new File(s"$base/b.instr")} check(_.exists()) exec(_.delete())
   os = en.initSingle(s"${base}/b.instr")
   os = en.dataStream()
@@ -63,7 +61,7 @@ object AkkaSys extends App {
   en.writeHeader()
 
   encrypted = mapper.writeValueAsString(MoveInstruction("b.html", s"$base", s"$toBase", Some("c.html")))
-  en = EncryptingProtocolProvider(instructionProtocol.protocolId)
+  en = EncryptingProtocolProvider(instructionProtocol)
   keep{new File(s"$base/c.instr")} check(_.exists()) exec(_.delete())
   en.initSingle(s"${base}/c.instr")
   os = en.dataStream()
@@ -71,7 +69,7 @@ object AkkaSys extends App {
   en.writeHeader()
 
   encrypted = mapper.writeValueAsString(CopyInstruction("c.html", s"$base", s"$toBase", Some("d.html")))
-  en = EncryptingProtocolProvider(instructionProtocol.protocolId)
+  en = EncryptingProtocolProvider(instructionProtocol)
   keep{new File(s"$base/d.instr")} check(_.exists()) exec(_.delete())
   en.initSingle(s"${base}/d.instr")
   os = en.dataStream()
